@@ -42,13 +42,13 @@ Is in TOP 50 - + 3
 Is in TOP 10 - + 4
 Sums up to 10
 """
+import datetime
 import math
+import time
 
 import malclient
 from friend_scrapper import *
 from random import choice
-
-from matplotlib import pyplot
 
 print("Creating independent API connection...")
 
@@ -76,7 +76,16 @@ animes_dropped = [item['id'] for item in client.get_user_anime_list(status="drop
 animes_ptw = [item['id'] for item in client.get_user_anime_list(status="plan_to_watch")['data']]
 total_unique_animes = {item: 10 for item in set(total_animes) - animes_watching}
 
-animes_with_genres = {item: client.get_anime_details(item).genres for item in set(total_animes) - animes_watching}
+now = datetime.datetime.now()
+temp_data = list(set(total_animes) - animes_watching)
+animes_with_genres = {item: client.get_anime_genres(item) for item in temp_data[:500]}
+time.sleep(10)
+animes_with_genres += {item: client.get_anime_genres(item) for item in temp_data[500:1000]}
+time.sleep(10)
+animes_with_genres += {item: client.get_anime_genres(item) for item in temp_data[1000:]}
+
+# animes_with_genres = {item: client.get_anime_details(item).genres for item in set(total_animes) - animes_watching}
+print("Calculation time: ", datetime.datetime.now() - now)
 
 animes_top_100 = [item.id for item in client.get_anime_ranking(limit=100)]
 animes_top_50 = [item.id for item in client.get_anime_ranking(limit=50)]
@@ -158,39 +167,3 @@ for anime, scores in total_anime_scores.items():
 max_value = max(total_unique_animes.values())
 top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value]
 print(choice(top_scored_animes))
-
-# region Deprecated
-# dominant_wage = max(set(list(total_unique_animes.values())), key=list(total_unique_animes.values()).count)
-# dominant_wage_count = list(total_unique_animes.values()).count(dominant_wage)
-# custom_wages = list(total_unique_animes.values()).copy()
-# ordered_wages = list(sorted(list(set(custom_wages.copy()))))
-# for i in range(len(custom_wages)):
-#     if custom_wages[i] > dominant_wage * 1.2:
-#         # int(dominant_wage_count * (1 + dominant_wage_count/len(custom_wages))) *
-#         custom_wages[i] *= ((len(ordered_wages) - ordered_wages.index(custom_wages[i]) + 1) ** 2)
-#
-# pyplot.figure(figsize=(19.2, 10.8))
-# pyplot.scatter([-10 for i in range(len(total_unique_animes.values()))], list(total_unique_animes.values()), label="Rozkład domyślnych wag")
-# test_data = [choices(list(total_unique_animes.values()), custom_wages)[0] for i in range(1000)]
-# test_data_counts = [int(test_data.count(item)) for item in set(test_data)]
-# test_data = list(set(test_data))
-# pyplot.scatter(test_data_counts, test_data, label="Wybrane wartości wag")
-#
-# for i in range(len(test_data)):
-#     pyplot.annotate(test_data_counts[i], (test_data_counts[i], test_data[i]))
-#
-# for i in range(len(set(total_unique_animes.values()))):
-#     pyplot.annotate(list(total_unique_animes.values()).count(list(set(total_unique_animes.values()))[i]), (-10, list(set(total_unique_animes.values()))[i]))
-#
-# pyplot.yticks(range(-20, 36, 2))
-# pyplot.grid()
-# pyplot.xlabel("Ilość trafień w wartość (łącznych strzałów: 1000)")
-# pyplot.ylabel("Wartość wagi przed modyfikacją")
-# pyplot.legend()
-# pyplot.show()
-#
-# data = choices(list(total_unique_animes.keys()), list(total_unique_animes.values()))
-# anime_info = client.get_anime_details(data[0])
-# print(total_unique_animes)
-# print(anime_info.title, data[0], total_unique_animes[data[0]])
-# endregion
