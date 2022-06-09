@@ -33,7 +33,9 @@ class MyList():
         uri = f'anime/{anime_id}/my_list_status'
         return (self._api_handler.call("delete"))
 
-    def get_user_anime_list(self, username="@me", sort=None, status=None, limit=100):
+    def get_user_anime_list(self, username="@me", sort=None, status=None, limit=100, optional_fields=None):
+        if optional_fields is None:
+            optional_fields = []
         uri = f'users/{username}/animelist'
         sort_options = [
             "list_score", "list_updated_at", "anime_title", "anime_start_date",
@@ -41,7 +43,7 @@ class MyList():
         ]
         if sort not in sort_options:
             sort = "list_score"
-        params = {"sort": sort, "limit": limit, "fields": "list_status"}
+        params = {"sort": sort, "limit": limit, "fields": ",".join(["list_status"] + optional_fields)}
         if status is not None:
             params['status'] = status
         return self._api_handler.call(uri=uri, params=params)

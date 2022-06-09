@@ -46,9 +46,12 @@ import datetime
 import math
 import time
 
+import db_utils
 import malclient
 from friend_scrapper import *
 from random import choice
+
+
 
 print("Creating independent API connection...")
 
@@ -59,40 +62,71 @@ client = malclient.Client(access_token=mal_access_token)
 user_data = client.get_user_info()
 friends = get_user_friends(user_data['name'])
 
+db_client = db_utils.DatabaseClient("animes.db")
 
 friend_lists = []
 
 print("Fetching list data for users: " + ", ".join(friends))
 
+
+def calculate_favourite_genres(user: str = "@me"):
+    user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', optional_fields=['genres'])['data']
+    genres = {}
+    for anime in user_list:
+        for genre in anime['genres']:
+            try:
+                genres[genre['name']]['count'] += 1
+                genres[genre['name']]['score'] += anime['score']
+            except KeyError:
+                genres[genre['name']] = {'score': anime['score'],
+                                 'count': 1}
+    return sorted(genres.items(), key=lambda item: sum(item[1]['score'])/item[1]['count'], reverse=True)
+
+
+print(calculate_favourite_genres())
+quit()
+
 for user in friends:
-    temp_list = client.get_user_anime_list(username=user, limit=1000, status='completed')['data'] + client.get_user_anime_list(username=user, limit=1000, status='watching')['data']
+    temp_list = client.get_user_anime_list(username=user, limit=1000, status='completed', optional_fields=["genres"])['data'] + client.get_user_anime_list(username=user, limit=1000, status='watching', optional_fields=["genres"])['data']
     friend_lists.append(temp_list)
 
-total_animes = [item['id'] for sublist in friend_lists for item in sublist]
+merged_list = sum(friend_lists, [])
+
+total_animes = [item['id'] for item in merged_list]
 animes_watching = set([item["id"] for item in client.get_user_anime_list(status="watching")['data'] +
                        client.get_user_anime_list(status="on_hold")['data'] +
                        client.get_user_anime_list(status="completed")['data']])
+
 animes_dropped = [item['id'] for item in client.get_user_anime_list(status="dropped")['data']]
 animes_ptw = [item['id'] for item in client.get_user_anime_list(status="plan_to_watch")['data']]
 total_unique_animes = {item: 10 for item in set(total_animes) - animes_watching}
 
-now = datetime.datetime.now()
-temp_data = list(set(total_animes) - animes_watching)
-animes_with_genres = {item: client.get_anime_genres(item) for item in temp_data[:500]}
-time.sleep(10)
-animes_with_genres += {item: client.get_anime_genres(item) for item in temp_data[500:1000]}
-time.sleep(10)
-animes_with_genres += {item: client.get_anime_genres(item) for item in temp_data[1000:]}
-
-# animes_with_genres = {item: client.get_anime_details(item).genres for item in set(total_animes) - animes_watching}
-print("Calculation time: ", datetime.datetime.now() - now)
-
+# TODO This should be globalized, and synced just once in a while
 animes_top_100 = [item.id for item in client.get_anime_ranking(limit=100)]
 animes_top_50 = [item.id for item in client.get_anime_ranking(limit=50)]
 animes_top_10 = [item.id for item in client.get_anime_ranking(limit=10)]
 print("Filtering fetched data")
 
 print(total_unique_animes.keys())
+
+
+for item in merged_list:
+    if item['is_rewatching']:
+        try:
+            total_unique_animes[item] += 5
+        except KeyError:
+            pass
+
+animes_with_genres = {}
+
+for item in merged_list:
+    try:
+        animes_with_genres[item["id"]] = [genre['name'] for genre in item["genres"]]
+    except KeyError:
+        print(f"{item['title']} has no genres")
+
+print(animes_with_genres)
+
 
 total_anime_scores: dict[int, list[int]] = {}
 for user in friend_lists:
