@@ -1,47 +1,4 @@
-"""
-Base score: 10
-!! All of those are precise conditions, f.e. TOP 100 and TOP 50 do not exclude themselves !!
-Scored 1 by one friend - -10
-Scored 1 by 25% of watching friends - -10
-Scored 1 by 100% of watching friends - -10
 
-Scored 3 or less by one friend - -8
-Scored 3 or less by 25% of watching friends - -5
-Scored 3 or less by 100% of watching friends - -7
-
-Scored 5 or less by one friend - -3
-Scored 5 or less by 25% of watching friends - -3
-Scored 5 or less by 100% of watching friends - -4
-
-Scored 8 by one friend - +1
-Scored 8 by 25% of watching friends - +2
-Scored 8 by 100% of watching friends - +5
-
-Scored 9 by one friend - +2
-Scored 9 by 25% of watching friends - +4
-Scored 9 by 100% of watching friends - +10
-
-Scored 10 by one friend - +4
-Scored 10 by 25% of watching friends - +8
-Scored 10 by 100% of watching friends - +15
-
-Watched by every of your friends - +5
-To promote niche productions - watched by only 5% or less of your friends - +5
-
-One of your favourite genres - +3
-Three of your favourite genres - +10
-
-On your ptw list - +3
-Dropped by you - -10
-Re-watched by any of your friends - +5
-
-Is in MAL suggestions - +5
-
-Is in TOP 100 - +3
-Is in TOP 50 - + 3
-Is in TOP 10 - + 4
-Sums up to 10
-"""
 import datetime
 import math
 import time
@@ -72,18 +29,24 @@ print("Fetching list data for users: " + ", ".join(friends))
 def calculate_favourite_genres(user: str = "@me"):
     user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', optional_fields=['genres'])['data']
     genres = {}
+    total_count = len(user_list)
     for anime in user_list:
-        for genre in anime['genres']:
-            try:
-                genres[genre['name']]['count'] += 1
-                genres[genre['name']]['score'] += anime['score']
-            except KeyError:
-                genres[genre['name']] = {'score': anime['score'],
-                                 'count': 1}
-    return sorted(genres.items(), key=lambda item: sum(item[1]['score'])/item[1]['count'], reverse=True)
+        try:
+            for genre in anime['genres']:
+                try:
+                    genres[genre['name']]['count'] += 1
+                    genres[genre['name']]['score'] += anime['score']
+                except KeyError:
+                    genres[genre['name']] = {'score': anime['score'], 'count': 1}
+        except KeyError:
+            pass
+    # return sorted(genres.items(), key=lambda item: ((item[1]['score']/item[1]['count'])*45 + (item[1]['count']/total_count))/46, reverse=True)
+    return sorted(genres.items(), key=lambda item: (item[1]['score'] + item[1]['count']/total_count)/(item[1]['count'] + 1), reverse=True)
 
-
-print(calculate_favourite_genres())
+for friend in friends:
+    print(friend)
+    for genre in calculate_favourite_genres(friend)[:10]:
+        print(genre[0])
 quit()
 
 for user in friends:
@@ -108,7 +71,6 @@ animes_top_10 = [item.id for item in client.get_anime_ranking(limit=10)]
 print("Filtering fetched data")
 
 print(total_unique_animes.keys())
-
 
 for item in merged_list:
     if item['is_rewatching']:
