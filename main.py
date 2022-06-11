@@ -40,14 +40,27 @@ def calculate_favourite_genres(user: str = "@me"):
                     genres[genre['name']] = {'score': anime['score'], 'count': 1}
         except KeyError:
             pass
-    # return sorted(genres.items(), key=lambda item: ((item[1]['score']/item[1]['count'])*45 + (item[1]['count']/total_count))/46, reverse=True)
     return sorted(genres.items(), key=lambda item: (item[1]['score'] + item[1]['count']/total_count)/(item[1]['count'] + 1), reverse=True)
 
-for friend in friends:
-    print(friend)
-    for genre in calculate_favourite_genres(friend)[:10]:
-        print(genre[0])
-quit()
+
+def calculate_genre_score(anime_list: dict, score_list: dict[int, int]):
+    favourite_genres = [genre[0] for genre in calculate_favourite_genres()[:10]]
+    for anime, genres in anime_list.items():
+        genre_score = sum([1 if genre in favourite_genres else 0 for genre in genres])
+        if genre_score >= 3:
+            score_list[anime] += 3
+        if genre_score >= 5:
+            score_list[anime] += 10
+    return score_list
+
+
+def calculate_recomendation_score(score_list: dict[int, int]):
+    suggestions = [item['id'] for item in client.get_suggested_anime()]
+    for anime, score in score_list.items():
+        if anime in suggestions:
+            score_list[anime] += 5
+    return score_list
+
 
 for user in friends:
     temp_list = client.get_user_anime_list(username=user, limit=1000, status='completed', optional_fields=["genres"])['data'] + client.get_user_anime_list(username=user, limit=1000, status='watching', optional_fields=["genres"])['data']
@@ -63,6 +76,9 @@ animes_watching = set([item["id"] for item in client.get_user_anime_list(status=
 animes_dropped = [item['id'] for item in client.get_user_anime_list(status="dropped")['data']]
 animes_ptw = [item['id'] for item in client.get_user_anime_list(status="plan_to_watch")['data']]
 total_unique_animes = {item: 10 for item in set(total_animes) - animes_watching}
+for anime in merged_list:
+    if anime['related_anime']:
+        pass
 
 # TODO This should be globalized, and synced just once in a while
 animes_top_100 = [item.id for item in client.get_anime_ranking(limit=100)]
@@ -78,17 +94,6 @@ for item in merged_list:
             total_unique_animes[item] += 5
         except KeyError:
             pass
-
-animes_with_genres = {}
-
-for item in merged_list:
-    try:
-        animes_with_genres[item["id"]] = [genre['name'] for genre in item["genres"]]
-    except KeyError:
-        print(f"{item['title']} has no genres")
-
-print(animes_with_genres)
-
 
 total_anime_scores: dict[int, list[int]] = {}
 for user in friend_lists:
@@ -160,6 +165,22 @@ for anime, scores in total_anime_scores.items():
                     except KeyError:
                         pass
 
+animes_with_genres = {}
+
+for item in merged_list:
+    if item["id"] in animes_watching:
+        continue
+    try:
+        animes_with_genres[item["id"]] = [genre['name'] for genre in item["genres"]]
+    except KeyError:
+        print(f"{item['title']} has no genres")
+
+print(animes_with_genres)
+
+total_unique_animes = calculate_genre_score(animes_with_genres, total_unique_animes.copy())
+total_unique_animes = calculate_recomendation_score(total_unique_animes)
+
 max_value = max(total_unique_animes.values())
 top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value]
+print(top_scored_animes)
 print(choice(top_scored_animes))
