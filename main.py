@@ -1,184 +1,40 @@
-
-import datetime
-import math
-import time
-
-import db_utils
-import malclient
-from friend_scrapper import *
+import library
 from random import choice
+import malclient
 
-
+from friend_scrapper import get_user_friends
 
 print("Creating independent API connection...")
-
-
-mal_access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjIzMDU5ZDA3NWY3NWYzMmEwZmY5YjgxMzYwMjBiZDZlZjBiMDUxYTk1YmU0NWFmMjQ2NDAxZGM4YjI0ODY5OWIzNDEzNzE1ODgwNDVkOTFhIn0.eyJhdWQiOiI0ODU2M2I5MDYzMTBkM2ZkYjRjZWZhMWMxODc3YmZjMyIsImp0aSI6IjIzMDU5ZDA3NWY3NWYzMmEwZmY5YjgxMzYwMjBiZDZlZjBiMDUxYTk1YmU0NWFmMjQ2NDAxZGM4YjI0ODY5OWIzNDEzNzE1ODgwNDVkOTFhIiwiaWF0IjoxNjUzODUwMjc3LCJuYmYiOjE2NTM4NTAyNzcsImV4cCI6MTY1NjUyODY3Nywic3ViIjoiMTA4MzEzMzAiLCJzY29wZXMiOltdfQ.agNWv5QUlC3T1XaH-MKBO7g0p6eSZ6LNjeNaBaYwifv_M1R4Q2QniKtlLtOJQuZguLe1GlOMq9qrklxVx99MlpfCdkVyNP2lSceBiB7UHrruRwmuwiHVW7qDjFA1QlpwvLYQNpFmmJD9AyLZcFnmhQ2yMH--wQUOUQYsH4EkmbDadJi3e8w1lNNtuI1Z1M1v9BQf0rjn1JGXY4AamHKrFj_gW8BgvYFu0N6hcnS6IxI_ebbapqQLfniW5RRfP6c8Ex684WBLH_bC5BjPc4e1GmDFk3OTfgLO5tijWQnK9i5UMpNVi1jWXylZRr7zQ0QYJcs6w-XBFQG9ps6-Eyp2PA'
+app = library.App()
+mal_access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjRhM2U5YzJiYmMyMmFmOTZhOGRhNDk3ZTkzZTk1MDQyZDlmMjUxNmU2NzY3NTY5YzUxNzFiOWZkNWQ4Y2ZiZjkyYTkxNGUyOGU4M2VhZWU1In0.eyJhdWQiOiJiYzIwODEwOTJiYTA1OWJiMDA2ZDYxMjkwMjg4NmRmYSIsImp0aSI6IjRhM2U5YzJiYmMyMmFmOTZhOGRhNDk3ZTkzZTk1MDQyZDlmMjUxNmU2NzY3NTY5YzUxNzFiOWZkNWQ4Y2ZiZjkyYTkxNGUyOGU4M2VhZWU1IiwiaWF0IjoxNjYwOTg2MTgyLCJuYmYiOjE2NjA5ODYxODIsImV4cCI6MTY2MzY2NDU4Miwic3ViIjoiMTA4MzEzMzAiLCJzY29wZXMiOltdfQ.TbsSo6OGO8l-z5grQBCBr7lljptfO2LETENQLfgfPr28x0y8oQrQfJ9Iku5KwzNWaYxtM64jvaaYQPpni59STQzyqYmcUY3xi6QXC4u6e8uQ1juvvcY_3SD7C6s-k49a3gGWaMUn59pPEH_rm3YykdBVMeb8hzRHa9AWkCMw6qLwUMyFrAUulgO2TcH0OOtLFm3J5rY8_oWmfW8LmGU2SrtYHk3vTJYV-OW7aLUpyQGXmrAqToiKKuF9MfDFwkJRbxfgrLRy_vx-PskK9q2RcAtCmX0-abaRugh3E39Dl9VPz_Xt8a73orfeKIX3tygfLxfRaJO7R9q1MJhhgdR9uA'
 client = malclient.Client(access_token=mal_access_token)
 
 user_data = client.get_user_info()
 friends = get_user_friends(user_data['name'])
 
-db_client = db_utils.DatabaseClient("animes.db")
-
-friend_lists = []
-
 print("Fetching list data for users: " + ", ".join(friends))
 
 
-def calculate_favourite_genres(user: str = "@me"):
-    user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', optional_fields=['genres'])['data']
-    genres = {}
-    total_count = len(user_list)
-    for anime in user_list:
-        try:
-            for genre in anime['genres']:
-                try:
-                    genres[genre['name']]['count'] += 1
-                    genres[genre['name']]['score'] += anime['score']
-                except KeyError:
-                    genres[genre['name']] = {'score': anime['score'], 'count': 1}
-        except KeyError:
-            pass
-    return sorted(genres.items(), key=lambda item: (item[1]['score'] + item[1]['count']/total_count)/(item[1]['count'] + 1), reverse=True)
+app.populate_top_rankings(client)
 
+merged_list, friend_lists = library.generate_friend_anime_list(client, friends)
+animes_watching, animes_ptw, animes_dropped = library.get_client_status_lists(client)
+animes_with_genres = library.generate_genre_list(merged_list, animes_watching)
 
-def calculate_genre_score(anime_list: dict, score_list: dict[int, int]):
-    favourite_genres = [genre[0] for genre in calculate_favourite_genres()[:10]]
-    for anime, genres in anime_list.items():
-        genre_score = sum([1 if genre in favourite_genres else 0 for genre in genres])
-        if genre_score >= 3:
-            score_list[anime] += 3
-        if genre_score >= 5:
-            score_list[anime] += 10
-    return score_list
+total_unique_animes = library.generate_scores_table(merged_list, animes_watching)
+total_unique_animes = library.calculate_genre_score(client, animes_with_genres, total_unique_animes.copy())
+total_unique_animes = library.calculate_recommendation_score(client, total_unique_animes)
+total_unique_animes = library.calculate_rewatch_score(merged_list, total_unique_animes)
 
-
-def calculate_recomendation_score(score_list: dict[int, int]):
-    suggestions = [item['id'] for item in client.get_suggested_anime()]
-    for anime, score in score_list.items():
-        if anime in suggestions:
-            score_list[anime] += 5
-    return score_list
-
-
-for user in friends:
-    temp_list = client.get_user_anime_list(username=user, limit=1000, status='completed', optional_fields=["genres"])['data'] + client.get_user_anime_list(username=user, limit=1000, status='watching', optional_fields=["genres"])['data']
-    friend_lists.append(temp_list)
-
-merged_list = sum(friend_lists, [])
-
-total_animes = [item['id'] for item in merged_list]
-animes_watching = set([item["id"] for item in client.get_user_anime_list(status="watching")['data'] +
-                       client.get_user_anime_list(status="on_hold")['data'] +
-                       client.get_user_anime_list(status="completed")['data']])
-
-animes_dropped = [item['id'] for item in client.get_user_anime_list(status="dropped")['data']]
-animes_ptw = [item['id'] for item in client.get_user_anime_list(status="plan_to_watch")['data']]
-total_unique_animes = {item: 10 for item in set(total_animes) - animes_watching}
-for anime in merged_list:
-    if anime['related_anime']:
-        pass
-
-# TODO This should be globalized, and synced just once in a while
-animes_top_100 = [item.id for item in client.get_anime_ranking(limit=100)]
-animes_top_50 = [item.id for item in client.get_anime_ranking(limit=50)]
-animes_top_10 = [item.id for item in client.get_anime_ranking(limit=10)]
-print("Filtering fetched data")
-
-print(total_unique_animes.keys())
-
-for item in merged_list:
-    if item['is_rewatching']:
-        try:
-            total_unique_animes[item] += 5
-        except KeyError:
-            pass
-
-total_anime_scores: dict[int, list[int]] = {}
-for user in friend_lists:
-    for anime in user:
-        if anime["id"] in total_anime_scores:
-            total_anime_scores[anime["id"]].append(anime["score"])
-        else:
-            total_anime_scores[anime["id"]] = [anime["score"]]
-
-# TODO check for correct values (UnitTest should be prepared)
-pricing = {10: {1: 4, 0.25: 8, 0.99: 15},
-           9: {1: 1, 0.25: 2, 0.99: 5},
-           8: {1: 2, 0.25: 4, 0.99: 10},
-           5: {1: -3, 0.25: -3, 0.99: -4},
-           3: {1: -8, 0.25: -5, 0.99: -7},
-           1: {1: -10, 0.25: -10, 0.99: -10}}
-
+total_anime_scores = library.get_friend_scores(friend_lists)
 for anime, scores in total_anime_scores.items():
-    if len(scores) == len(friends):
-        try:
-            total_unique_animes[anime] += 5
-        except KeyError:
-            pass
-    elif len(scores) <= math.ceil(len(friends)*0.05):
-        try:
-            total_unique_animes[anime] += 5
-        except KeyError:
-            pass
-
-    if anime in animes_ptw:
-        try:
-            total_unique_animes[anime] += 3
-        except KeyError:
-            pass
-    elif anime in animes_dropped:
-        try:
-            total_unique_animes[anime] -= 10
-        except KeyError:
-            pass
-
-    if anime in animes_top_100:
-        try:
-            total_unique_animes[anime] += 3
-        except KeyError:
-            pass
-    if anime in animes_top_50:
-        try:
-            total_unique_animes[anime] += 3
-        except KeyError:
-            pass
-    if anime in animes_top_10:
-        try:
-            total_unique_animes[anime] += 4
-        except KeyError:
-            pass
-
-    for score in (10, 9, 8, 5, 3, 1):
-        for value, price in pricing[score].items():
-            if isinstance(value, float):
-                if scores.count(score) > len(scores) * value:
-                    try:
-                        total_unique_animes[anime] += price
-                    except KeyError:
-                        pass
-            else:
-                if scores.count(score) > value:
-                    try:
-                        total_unique_animes[anime] += price
-                    except KeyError:
-                        pass
-
-animes_with_genres = {}
-
-for item in merged_list:
-    if item["id"] in animes_watching:
-        continue
     try:
-        animes_with_genres[item["id"]] = [genre['name'] for genre in item["genres"]]
+        total_unique_animes[anime] += library.calculate_friend_watch_rate_score(scores, friends)
+        total_unique_animes[anime] += library.calculate_status_score(anime, animes_ptw, animes_dropped)
+        total_unique_animes[anime] += library.calculate_rankings_score(anime, app.animes_top_100, app.animes_top_50, app.animes_top_10)
+        total_unique_animes[anime] += library.calculate_friend_rating_score(app.pricing, scores)
     except KeyError:
-        print(f"{item['title']} has no genres")
-
-print(animes_with_genres)
-
-total_unique_animes = calculate_genre_score(animes_with_genres, total_unique_animes.copy())
-total_unique_animes = calculate_recomendation_score(total_unique_animes)
+        pass
 
 max_value = max(total_unique_animes.values())
 top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value]
