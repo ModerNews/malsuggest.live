@@ -21,6 +21,3 @@ app = App()
 @app.get('/')
 def index():
     return make_response(render_template('index.html', redirect_url='https://google.com'), 200)
-
-
-app.run('0.0.0.0', 5000)
