@@ -152,3 +152,4 @@ cython_debug/
 .idea/
 geckodriver.exe
 geckodriver.log
+.vercel
