@@ -153,3 +153,4 @@ cython_debug/
 geckodriver.exe
 geckodriver.log
 .vercel
+.vercel
