@@ -1,15 +1,14 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import requests
+from bs4 import BeautifulSoup
 
 __all__ = ['get_user_friends']
 
+
 def get_user_friends(user: str) -> list[str]:
-    driver = webdriver.Firefox()
-    driver.get(f"https://myanimelist.net/profile/{user}")
-    elements = driver.find_elements(By.CSS_SELECTOR, "a.icon-friend")
+    data = requests.get(f"https://myanimelist.net/profile/{user}")
+    soup = BeautifulSoup(data.text, 'html.parser')
     friends = []
-    for element in elements:
-        friends.append(element.get_attribute("innerHTML"))
-    driver.close()
+    for element in soup.select('a.icon-friend'):
+        friends.append(element.get('title'))
     return friends
 
