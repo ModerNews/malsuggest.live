@@ -1,26 +1,21 @@
-import base64
-import datetime
 import logging
-import os
+import base64
 import zoneinfo
+import os
+import datetime
 
-import flask
-from flask import Flask, render_template, make_response, request, abort, redirect, url_for
-from flask_login import LoginManager
+from flask import current_app, render_template, redirect, url_for, make_response, request, abort
+from flask.blueprints import Blueprint
 
 import malclient
 
+__all__ = ['page_base_blueprint']
 
-class App(Flask):
-    def __init__(self):
-        super().__init__(__name__, static_folder='./static', template_folder='./templates')
-        self.debug_value = False
-
-
-app = App()
+page_base_blueprint = Blueprint(name='page_base', import_name='page_base_blueprint',
+                                template_folder='')
 
 
-@app.get('/')
+@page_base_blueprint.get('/')
 def index():
     url, code_verifier = malclient.generate_authorization_url('48563b906310d3fdb4cefa1c1877bfc3')
     logging.info(code_verifier)
@@ -30,7 +25,7 @@ def index():
     return response
 
 
-@app.get('/redirect')
+@page_base_blueprint.get('/redirect')
 def redirect_receive():
     try:
         code_verifier = base64.b64decode(request.cookies.get('code_verifier').encode()).decode()
@@ -45,28 +40,8 @@ def redirect_receive():
                                                     code=request.args.get('code'),
                                                     code_verifier=code_verifier,
                                                     redirect_uri=os.getenv('MAL_REDIRECT', 'http://127.0.0.1:5000/redirect'))
-    response = make_response(redirect(url_for('recommendations_page')), 302)
+    response = make_response(redirect(url_for('recommendations.recommendations_page')), 302)
     response.set_cookie('access_token', value=token_response.get('access_token'), samesite='Strict', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
     response.set_cookie('refresh_token', value=token_response.get('refresh_token'), samesite='Strict', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
     response.delete_cookie('code_verifier')
     return response
-
-
-@app.get('/recommendations')
-def recommendations_page():
-    if not app.debug_value:
-        app.debug_value = True
-        return render_template('loading.html')
-    else:
-        return render_template('results.html')
-
-@app.errorhandler(410)
-def code_verification_timeout(e):
-    return render_template('errors/error.html', error_title='You were timed-out',
-                           error_msg='What you were trying to do took too long, please try again')
-
-
-@app.errorhandler(400)
-def code_not_present(e):
-    return render_template('errors/error.html', error_title='There was an error in your request',
-                           error_msg='You did not provide code parameter')
