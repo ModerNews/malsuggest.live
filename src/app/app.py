@@ -10,9 +10,9 @@ from flask_login import LoginManager
 
 import malclient
 
-from base_paths import page_base_blueprint
-from error_handlers import error_handler_blueprint
-from recommendation_paths import recommendations_blueprint
+from .base_paths import page_base_blueprint
+from .error_handlers import error_handler_blueprint
+from .recommendation_paths import recommendations_blueprint
 
 class App(Flask):
     def __init__(self):
