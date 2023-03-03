@@ -29,6 +29,7 @@
                         <h2>Your data is being computed
                             <p id="dots" class="dots">...</p>
                         </h2>
+			<h4>This will take a while. Page refreshes automatically, so go grab some coffee.</h4>
                     </div>
                 </div>
             </div>
@@ -60,6 +61,37 @@
     <script src="../static/js/bootstrap-4.3.1.js"></script>
     <!-- Cute loading dot animation -->
     <script src="../static/js/loading.js"></script>
+    <!-- Socket.io import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <!--
+    <script>
+	    function createWebsocket(){
+            console.log("Starting websocket setup")
+            var socket = null;
+            socket = io('/test');
+            socket.on('connect', function () {
+                console.log("Connected to websocket");
+		socket.emit("message", socket.id);
+            })
+		    socket.on("message", function (data) {
+			console.log("Receiving message:" + data);
+		    });
+		    socket.on("response", function (data) {
+			console.log("Got something back:" + data);
+		    });	
+        }	
+
+        $(document).ready(function() {
+                if (location.pathname === "/recommendations"){
+                    createWebsocket();
+                }
+            }
+        )
+    </script>
+    -->
+    <script>
+	    setTimeout(() => {location.reload()}, 15000)
+    </script>
 </body>
 
 </html>
