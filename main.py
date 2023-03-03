@@ -5,7 +5,7 @@ from src.app import library
 from random import choice
 import malclient
 
-from friend_scrapper import get_user_friends
+from src.app.friend_scrapper import get_user_friends
 
 print("Creating independent API connection...")
 app = library.App()

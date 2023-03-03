@@ -17,9 +17,10 @@ page_base_blueprint = Blueprint(name='page_base', import_name='page_base_bluepri
 
 @page_base_blueprint.get('/')
 def index():
-    url, code_verifier = malclient.generate_authorization_url('48563b906310d3fdb4cefa1c1877bfc3')
+    # TODO check if token is present in cookies after user preses "Anonymous Search" button
+    url, code_verifier = malclient.generate_authorization_url('48563b906310d3fdb4cefa1c1877bfc3', redirect_uri=request.base_url + "redirect")
     logging.info(code_verifier)
-    response = make_response(render_template('index.html', redirect_url=url + '&redirect_uri=' + os.getenv('MAL_REDIRECT', 'http://127.0.0.1:5000/redirect')), 200)
+    response = make_response(render_template('index.html', redirect_url=url), 200)
     response.set_cookie('code_verifier', value=base64.b64encode(code_verifier.encode()).decode(),
                         expires=(datetime.datetime.now(tz=zoneinfo.ZoneInfo('Europe/London')) + datetime.timedelta(minutes=3)))
     return response
