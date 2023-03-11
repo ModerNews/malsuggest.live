@@ -2,6 +2,7 @@ import os
 
 import malclient
 from flask import Flask
+from .database import Connector
 
 __all__ = ["App"]
 
@@ -26,8 +27,8 @@ class DataBank(object):
 
 
 class App(Flask):
-    def __init__(self, name):
-        super().__init__(name, static_folder='./static', template_folder='./templates')
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(name, static_folder='./static', template_folder='./templates', *args, **kwargs)
         self.config.update(debug=True)
         self.debug_value = False
 
@@ -36,5 +37,11 @@ class App(Flask):
 
         self.data_bank: DataBank = DataBank()
 
+        self.database = None
+
     def connect_private_malclient_instance(self):
         self._private_client = malclient.Client(client_id=os.getenv("MAL_CLIENT_ID"))
+
+    def connect_database(self):
+        self.database = Connector()
+        print(self.database.get_cache_data())

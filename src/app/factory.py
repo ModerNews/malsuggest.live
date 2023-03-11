@@ -8,6 +8,7 @@ def create_app(app_name=__name__):
 
     app.connect_private_malclient_instance()
     app.data_bank.populate_top_rankings(app._private_client)
+    app.connect_database()
 
     from .base_paths import page_base_blueprint
     from .error_handlers import error_handler_blueprint

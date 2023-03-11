@@ -2,6 +2,7 @@ import celery
 import malclient
 from flask import current_app, render_template, request
 from flask.blueprints import Blueprint
+from celery.result import AsyncResult
 
 from .tasks import awaited_debug, calculate_personal_score
 
