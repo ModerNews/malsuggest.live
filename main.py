@@ -1,16 +1,18 @@
-import library
+import os
+
+
+from src.app import library
 from random import choice
 import malclient
 
-from friend_scrapper import get_user_friends
+from src.app.friend_scrapper import get_user_friends
 
 print("Creating independent API connection...")
 app = library.App()
-mal_access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjRhM2U5YzJiYmMyMmFmOTZhOGRhNDk3ZTkzZTk1MDQyZDlmMjUxNmU2NzY3NTY5YzUxNzFiOWZkNWQ4Y2ZiZjkyYTkxNGUyOGU4M2VhZWU1In0.eyJhdWQiOiJiYzIwODEwOTJiYTA1OWJiMDA2ZDYxMjkwMjg4NmRmYSIsImp0aSI6IjRhM2U5YzJiYmMyMmFmOTZhOGRhNDk3ZTkzZTk1MDQyZDlmMjUxNmU2NzY3NTY5YzUxNzFiOWZkNWQ4Y2ZiZjkyYTkxNGUyOGU4M2VhZWU1IiwiaWF0IjoxNjYwOTg2MTgyLCJuYmYiOjE2NjA5ODYxODIsImV4cCI6MTY2MzY2NDU4Miwic3ViIjoiMTA4MzEzMzAiLCJzY29wZXMiOltdfQ.TbsSo6OGO8l-z5grQBCBr7lljptfO2LETENQLfgfPr28x0y8oQrQfJ9Iku5KwzNWaYxtM64jvaaYQPpni59STQzyqYmcUY3xi6QXC4u6e8uQ1juvvcY_3SD7C6s-k49a3gGWaMUn59pPEH_rm3YykdBVMeb8hzRHa9AWkCMw6qLwUMyFrAUulgO2TcH0OOtLFm3J5rY8_oWmfW8LmGU2SrtYHk3vTJYV-OW7aLUpyQGXmrAqToiKKuF9MfDFwkJRbxfgrLRy_vx-PskK9q2RcAtCmX0-abaRugh3E39Dl9VPz_Xt8a73orfeKIX3tygfLxfRaJO7R9q1MJhhgdR9uA'
-client = malclient.Client(access_token=mal_access_token)
+client = malclient.Client(access_token=os.getenv('MAL_ACCESS'))
 
 user_data = client.get_user_info()
-friends = get_user_friends(user_data['name'])
+friends = get_user_friends(user_data.name)
 
 print("Fetching list data for users: " + ", ".join(friends))
 

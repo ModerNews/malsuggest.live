@@ -21,19 +21,18 @@ class App(object):
 
 
 def calculate_favourite_genres(client, user: str = "@me"):
-    user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', additional_fields=['genres'])[
-        'data']
+    user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=malclient.Fields.from_list(['genres', 'list_status']))
     genres = {}
     total_count = len(user_list)
     for anime in user_list:
         try:
-            for genre in anime['genres']:
+            for genre in anime.genres:
                 try:
-                    genres[genre['name']]['count'] += 1
-                    genres[genre['name']]['score'] += anime['score']
+                    genres[genre.name]['count'] += 1
+                    genres[genre.name]['score'] += anime.list_status.score
                 except KeyError:
-                    genres[genre['name']] = {'score': anime['score'], 'count': 1}
-        except KeyError:
+                    genres[genre.name] = {'score': anime.list_status.score, 'count': 1}
+        except TypeError:
             pass
     return sorted(genres.items(),
                   key=lambda item: (item[1]['score'] + item[1]['count'] / total_count) / (item[1]['count'] + 1),
@@ -65,34 +64,34 @@ def generate_friend_anime_list(client, friends):
         # fields = malclient.Fields()
         # fields.genres, fields.related_anime, fields.related_manga = True, malclient.Fields().node(), malclient.Fields().node()
         fields = ["genres", "related_anime", "related_manga"]
-        temp_list = client.get_user_anime_list(username=user, limit=1000, status='completed', additional_fields=fields)[
-                        'data'] + \
-                    client.get_user_anime_list(username=user, limit=1000, status='watching', additional_fields=fields)[
-                        'data']
-        friend_lists.append(temp_list)
+        temp_list1 = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=malclient.Fields.from_list(fields))
+        temp_list2 = client.get_user_anime_list(username=user, limit=1000, status='watching', fields=malclient.Fields.from_list(fields))
+        friend_lists.append(temp_list1 if temp_list1 else [] + temp_list2 if temp_list2 else [])
 
     return sum(friend_lists, []), friend_lists
 
 
 def get_client_status_lists(client):
-    animes_watching = set([item["id"] for item in client.get_user_anime_list(status="watching")['data'] +
-                           client.get_user_anime_list(status="on_hold")['data'] +
-                           client.get_user_anime_list(status="completed")['data']])
+    tmp1 = client.get_user_anime_list(status="watching")
+    tmp2 = client.get_user_anime_list(status="on_hold")
+    tmp3 = client.get_user_anime_list(status="completed")
 
-    animes_dropped = [item['id'] for item in client.get_user_anime_list(status="dropped")['data']]
-    animes_ptw = [item['id'] for item in client.get_user_anime_list(status="plan_to_watch")['data']]
+    animes_watching = set([item.id for item in [tmp1 if tmp1 else [] + tmp2 if tmp2 else [] + tmp3 if tmp3 else []][0]])
+
+    animes_dropped = [item.id for item in client.get_user_anime_list(status="dropped")]
+    animes_ptw = [item.id for item in client.get_user_anime_list(status="plan_to_watch")]
     return animes_watching, animes_ptw, animes_dropped
 
 
 def generate_scores_table(anime_list, animes_watching):
-    return {item: 10 for item in set([item['id'] for item in anime_list]) - animes_watching}
+    return {item: 10 for item in set([item.id for item in anime_list]) - animes_watching}
 
 
 def calculate_rewatch_score(merged_list, anime_score_list):
     for item in merged_list:
-        if item['is_rewatching']:
+        if item.list_status.is_rewatching:
             try:
-                anime_score_list[item['id']] += 5
+                anime_score_list[item.id] += 5
             except KeyError:
                 pass
     return anime_score_list
@@ -102,10 +101,10 @@ def get_friend_scores(friend_lists):
     total_anime_scores: dict[int, list[int]] = {}
     for user in friend_lists:
         for anime in user:
-            if anime["id"] in total_anime_scores:
-                total_anime_scores[anime["id"]].append(anime["score"])
+            if anime.id in total_anime_scores:
+                total_anime_scores[anime.id].append(anime.list_status.score)
             else:
-                total_anime_scores[anime["id"]] = [anime["score"]]
+                total_anime_scores[anime.id] = [anime.list_status.score]
     return total_anime_scores
 
 
@@ -157,10 +156,10 @@ def calculate_friend_rating_score(pricing, scores):
 def generate_genre_list(merged_list, animes_watching):
     animes_with_genres = {}
     for item in merged_list:
-        if item["id"] in animes_watching:
+        if item.id in animes_watching:
             continue
         try:
-            animes_with_genres[item["id"]] = [genre['name'] for genre in item["genres"]]
-        except KeyError:
-            print(f"{item['title']} has no genres")
+            animes_with_genres[item.id] = [genre.name for genre in item.genres]
+        except TypeError:
+            print(f"{item.title} has no genres")
     return animes_with_genres

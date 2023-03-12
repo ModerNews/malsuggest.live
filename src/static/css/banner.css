@@ -1,0 +1,12 @@
+/* CSS Document */
+
+.banner {
+    object-fit: cover;
+    width: 100%;
+    height: 200px;
+}
+
+.imginv {
+    -webkit-filter: invert(100%);
+    filter: invert(100%);
+}

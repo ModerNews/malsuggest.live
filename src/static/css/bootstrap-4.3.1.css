@@ -68,9 +68,9 @@ body {
     font-size: 1rem;
     font-weight: 400;
     line-height: 1.5;
-    color: #212529;
+    color: aliceblue;
     text-align: left;
-    background-color: #fff;
+    background-color: #1e1e1e;
 }
 
 [tabindex="-1"]:focus {
@@ -5384,7 +5384,7 @@ a.badge-dark.focus {
 .jumbotron {
     padding: 2rem 1rem;
     margin-bottom: 2rem;
-    background-color: #e9ecef;
+    background-color: #252526;
     border-radius: 0.3rem;
 }
 
@@ -6925,7 +6925,7 @@ button.bg-light:focus {
 }
 
 .bg-dark {
-    background-color: #3A81C8 !important;
+    background-color: #007acc !important;
 }
 
 a.bg-dark:hover,
