@@ -8,16 +8,19 @@ import malclient
 
 from .friend_scrapper import get_user_friends
 
-from flask_socketio import emit
-
 
 @celery.task()
 def awaited_debug():
     return True
 
 
-@celery.task()
-def calculate_personal_score(client: malclient.Client, data_bank):
+def pass_data_to_database(data, task_id, connection):
+    cache_id = connection.create_cache_data(*data)
+    connection.bind_cache_to_task(cache_id, task_id)
+
+
+@celery.task(bind=True)
+def calculate_personal_score(self, client: malclient.Client, data_bank, db_connector):
     """
     This Function calculates users score. This uses custom access token for each user, bypassing rate limit.
     """
@@ -53,6 +56,6 @@ def calculate_personal_score(client: malclient.Client, data_bank):
 
     max_value = max(total_unique_animes.values())
     top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value]
-    print(top_scored_animes)
-    print(choice(top_scored_animes))
-    return choice(top_scored_animes)
+    chosen = choice(top_scored_animes)
+    pass_data_to_database([top_scored_animes, chosen], self.id, db_connector)
+    return chosen

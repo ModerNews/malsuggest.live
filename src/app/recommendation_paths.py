@@ -14,7 +14,9 @@ def recommendations_page():
     # TODO check if no additional processes started
     if not current_app.debug_value:
         client = malclient.Client(access_token=request.cookies["access_token"], refresh_token=request.cookies['refresh_token'])
-        calculator_task: celery.Task = calculate_personal_score.delay(client, current_app.data_bank)
+        calculator_task: celery.Task = calculate_personal_score.delay(client, current_app.data_bank, current_app.database)
+        current_app.database.create_task(calculator_task.id)
+        current_app.debug_value = True
         return render_template('loading.html')
     else:
         return render_template('results.html')
