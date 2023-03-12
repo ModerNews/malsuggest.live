@@ -15,3 +15,21 @@ class CRUD:
     def get_cache_before_date(self, timestamp: datetime.datetime | datetime.date):
         if isinstance(timestamp, datetime.date):
             timestamp = datetime.datetime.combine(timestamp, datetime.time.min)
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT * FROM cache WHERE timestamp < %s", (timestamp, ))
+            return cur.fetchall()
+
+    def create_cache_data(self, primary_result, all_results):
+        assert (isinstance(primary_result, int) or isinstance(primary_result, str))
+        assert isinstance(all_results, list)
+        with self._conn.cursor() as cur:
+            cur.execute("INSERT INTO cache VALUES (default, %s, %s, default) RETURNING id", (primary_result, all_results, ))
+            return cur.fetchone()[0]
+
+    def create_task(self, task_id):
+        with self._conn.cursor() as cur:
+            cur.execute("INSERT INTO task_state VALUES (default, task_id, default)", (task_id, ))
+
+    def bind_cache_to_task(self, task_id, cache_id):
+        with self._conn.cursor() as cur:
+            cur.execute("UPDATE task_state SET cache_id = %s WHERE task_id = %s", (cache_id, task_id, ))
