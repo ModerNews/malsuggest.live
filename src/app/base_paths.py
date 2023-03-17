@@ -40,9 +40,9 @@ def redirect_receive():
                                                     client_secret=os.getenv('MAL_CLIENT_SECRET'),
                                                     code=request.args.get('code'),
                                                     code_verifier=code_verifier,
-                                                    redirect_uri=os.getenv('MAL_REDIRECT', 'http://127.0.0.1:5000/redirect'))
+                                                    redirect_uri=request.base_url)
     response = make_response(redirect(url_for('recommendations.recommendations_page')), 302)
-    response.set_cookie('access_token', value=token_response.get('access_token'), samesite='Strict', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
-    response.set_cookie('refresh_token', value=token_response.get('refresh_token'), samesite='Strict', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
+    response.set_cookie('access_token', value=token_response.get('access_token'), samesite='Lax', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
+    response.set_cookie('refresh_token', value=token_response.get('refresh_token'), samesite='Lax', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
     response.delete_cookie('code_verifier')
     return response

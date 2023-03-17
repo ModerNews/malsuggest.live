@@ -44,4 +44,3 @@ class App(Flask):
 
     def connect_database(self):
         self.database = Connector()
-        print(self.database.get_cache_data())
