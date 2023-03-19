@@ -8,3 +8,5 @@ Flask-Login~=0.6.2
 celery
 flask-celery
 psycopg2
+flower
+bs4
