@@ -2,8 +2,8 @@ import celery
 import malclient
 from flask import current_app, render_template, request, make_response
 from flask.blueprints import Blueprint
-from celery.result import AsyncResult
 
+from . import celery as celery_instance
 from .tasks import awaited_debug, calculate_personal_score
 
 recommendations_blueprint = Blueprint(name='recommendations', import_name='recommendations_blueprint')
@@ -11,21 +11,20 @@ recommendations_blueprint = Blueprint(name='recommendations', import_name='recom
 
 @recommendations_blueprint.get('/recommendations')
 def recommendations_page():
-    # TODO check if no additional processes started
     try:
-        # TODO I don't even fucking know
         task_id = request.cookies['task_id']
-        task = AsyncResult(task_id)
-        print(task.finished())# raises ValueError if cookie wasn't set
+        task = celery_instance.AsyncResult(task_id)
         if task.state in ("STARTED",):
             # Task is still running
             return render_template('loading.html')
         elif task.state in ("PENDING",):
             # Task status is unknown - Schedule new task
+            print("Starting new task")
             raise ValueError('Task status is unknown')
 
         cache = current_app.database.get_cache_by_task_id(task_id)
-        if cache != ():
+        print(cache)
+        if not cache:  # Checks if cache list, tuple, etc. is empty
             # TODO render response from cache
             return render_template('results.html', recommendations=cache)
             pass

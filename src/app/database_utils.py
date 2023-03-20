@@ -21,7 +21,6 @@ class CRUD:
             return cur.fetchall()
 
     def create_cache_data(self, all_results, primary_result):
-        print(type(primary_result), type(all_results))
         assert (isinstance(primary_result, int) or isinstance(primary_result, str))
         assert isinstance(all_results, Collection)
         with self._conn.cursor() as cur:
