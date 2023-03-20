@@ -57,7 +57,7 @@ def calculate_personal_score(self, client: malclient.Client, data_bank):
             pass
 
     max_value = max(total_unique_animes.values())
-    top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value]
+    top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value][:13]
     chosen = choice(top_scored_animes)
     pass_data_to_database([top_scored_animes, chosen], self.request.id)
     return chosen

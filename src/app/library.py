@@ -21,7 +21,10 @@ class App(object):
 
 
 def calculate_favourite_genres(client, user: str = "@me"):
-    user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=malclient.Fields.from_list(['genres', 'list_status']))
+    fields = malclient.Fields()
+    fields.genres = True
+    # fields.list_status = malclient.ListStatusFields.all()
+    user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=fields, list_status_fields=malclient.ListStatusFields.all())
     genres = {}
     total_count = len(user_list)
     for anime in user_list:
@@ -64,8 +67,8 @@ def generate_friend_anime_list(client, friends):
         # fields = malclient.Fields()
         # fields.genres, fields.related_anime, fields.related_manga = True, malclient.Fields().node(), malclient.Fields().node()
         fields = ["genres", "related_anime", "related_manga"]
-        temp_list1 = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=malclient.Fields.from_list(fields))
-        temp_list2 = client.get_user_anime_list(username=user, limit=1000, status='watching', fields=malclient.Fields.from_list(fields))
+        temp_list1 = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=malclient.Fields.from_list(fields), list_status_fields=malclient.ListStatusFields.all())
+        temp_list2 = client.get_user_anime_list(username=user, limit=1000, status='watching', fields=malclient.Fields.from_list(fields), list_status_fields=malclient.ListStatusFields.all())
         friend_lists.append(temp_list1 if temp_list1 else [] + temp_list2 if temp_list2 else [])
 
     return sum(friend_lists, []), friend_lists

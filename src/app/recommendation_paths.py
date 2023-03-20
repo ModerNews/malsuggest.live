@@ -13,12 +13,27 @@ recommendations_blueprint = Blueprint(name='recommendations', import_name='recom
 def recommendations_page():
     # TODO check if no additional processes started
     try:
-        # Task finished
-        task_id = request.cookies.get('task_id')
-        task = AsyncResult(task_id)  # raises ValueError if cookie wasn't set
-        print(task.status)
-        return render_template('results.html')
-    except ValueError:
+        # TODO I don't even fucking know
+        task_id = request.cookies['task_id']
+        task = AsyncResult(task_id)
+        print(task.finished())# raises ValueError if cookie wasn't set
+        if task.state in ("STARTED",):
+            # Task is still running
+            return render_template('loading.html')
+        elif task.state in ("PENDING",):
+            # Task status is unknown - Schedule new task
+            raise ValueError('Task status is unknown')
+
+        cache = current_app.database.get_cache_by_task_id(task_id)
+        if cache != ():
+            # TODO render response from cache
+            return render_template('results.html', recommendations=cache)
+            pass
+        else:
+            # Task state is known and finished, but no cache found in database
+            raise ValueError('Cache for task not found in database')
+
+    except (ValueError, KeyError):
         # task not even started
         client = malclient.Client(access_token=request.cookies["access_token"], refresh_token=request.cookies['refresh_token'])
         calculator_task: celery.Task = calculate_personal_score.delay(client, current_app.data_bank)
