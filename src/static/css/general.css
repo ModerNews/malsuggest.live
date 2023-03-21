@@ -1,0 +1,17 @@
+@media screen and (max-width: 1000px) {
+    .desktop_view {
+        display: none;
+    }
+    .mobile_view {
+        display: block;
+    }
+}
+
+@media screen and (min-width: 1000px) {
+    .desktop_view {
+        display: block;
+    }
+    .mobile_view {
+        display: none;
+    }
+}
