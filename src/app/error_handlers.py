@@ -14,3 +14,9 @@ def code_verification_timeout(e):
 def code_not_present(e):
     return render_template('errors/error.html', error_title='There was an error in your request',
                            error_msg='You did not provide code parameter')
+
+
+@error_handler_blueprint.app_errorhandler(404)
+def page_not_available(e):
+    return render_template('errors/error.html', error_title='Page not found',
+                           error_msg='This probably means that the function you tried to use was not implemented yet')

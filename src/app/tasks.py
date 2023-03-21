@@ -26,9 +26,6 @@ def calculate_personal_score(self, client: malclient.Client, data_bank):
     """
     This Function calculates users score. This uses custom access token for each user, bypassing rate limit.
     """
-
-    # TODO introduce database dump
-
     user_data = client.get_user_info()
     friends = get_user_friends(user_data.name)
 
