@@ -1,0 +1,28 @@
+services:
+  database:
+    secrets:
+    - psql_passwd
+    build:
+      context: ./database
+      dockerfile: dockerfile
+    expose:
+      - 5432
+    networks:
+      - server-side
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=/run/secrets/psql_passwd
+    
+  flask_server:
+    build:
+      context: .
+      dockerfile: dockerfile
+    expose:
+    - 80
+    networks:
+      - server-side
+    environment:
+      - name=value
+
+networks:
+  server-side:
