@@ -7,6 +7,7 @@ pydantic~=1.10.2
 Flask-Login~=0.6.2
 celery
 flask-celery
-psycopg2
+psycopg2-binary
 flower
 bs4
+redis

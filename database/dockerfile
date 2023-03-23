@@ -1,6 +1,7 @@
-FROM postgres:15.2-alpine as base
+FROM postgres:15.2-buster as base
 
-WORKDIR /root
-ADD ./database_dump.sql .
+EXPOSE 5432
 
-ENTRYPOINT ["database_dump.sql"]
+WORKDIR /home/anime_suggester
+
+ADD ./database_dump.sql /docker-entrypoint-initdb.d/
