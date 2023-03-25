@@ -1,4 +1,4 @@
-FROM postgres:15.2-buster as base
+FROM postgres:15.2-bullseye as base
 
 EXPOSE 5432
 

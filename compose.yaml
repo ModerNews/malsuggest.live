@@ -6,7 +6,7 @@ services:
       context: ./database
       dockerfile: dockerfile
     expose:
-      - 5432
+      - 5432:5432
     networks:
       - server-side
     environment:
@@ -22,25 +22,30 @@ services:
       dockerfile: Dockerfile
     expose:
     - 5000:5000
+    - 5555:5555
     networks:
       - server-side
       - client-side
     environment:
-      - CELERY_BROKER_URL=redis://localhost:6379/0
-      - CELERY_RESULT_BACKEND=redis://localhost:6379/1
-      - DB_HOST=192.168.0.21
+      - CELERY_BROKER_URL=redis://redis_backend:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis_backend:6379/1
+      - DB_HOST=database
       - DB_PASS=2137
       - DB_PORT=5432
       - DB_SCHEMA=anime_suggester
       - DB_USER=anime_suggester_client
       - MAL_CLIENT_ID=48563b906310d3fdb4cefa1c1877bfc3
       - MAL_CLIENT_SECRET=7d1c1c9dff161b5bf61dbbb1cc8ceed03d7988db888fc702ef8b9a6ebff7de7e
+      - TEMPLATE_PATH=/home/anime_suggester/templates/
+      - STATIC_PATH=/home/anime_suggester/static/
     depends_on:
       - database
-      - redis-backend
+      - redis_backend
 
-  redis-backend:
+  redis_backend:
     image: redis:latest
+    restart: always
+    command: redis-server --save 60 1
     expose:
       - 6379:6379
     networks:
@@ -58,8 +63,8 @@ services:
       - flask_server
 
 networks:
-  server-side:
-  client-side:
+  server-side: {}
+  client-side: {}
 
 volumes:
   db_data: {}
