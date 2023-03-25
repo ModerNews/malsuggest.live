@@ -28,7 +28,9 @@ class DataBank(object):
 
 class App(Flask):
     def __init__(self, name, *args, **kwargs):
-        super().__init__(name, static_folder='./static', template_folder='./templates', *args, **kwargs)
+        super().__init__(name,
+                         static_folder=os.getenv('STATIC_PATH', './static'),
+                         template_folder=os.getenv('TEMPLATE_PATH', './templates'), *args, **kwargs)
         self.config.update(debug=True)
         self.debug_value = False
 

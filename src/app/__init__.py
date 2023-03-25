@@ -6,11 +6,9 @@ from .factory import create_app
 
 
 def make_celery(app_name=__name__):
-    backend = "redis://127.0.0.1:6379/0"
-    broker = "redis://127.0.0.1:6379/1"
-    celery = Celery(app_name, backend=backend, broker=broker, imports=('app.tasks', ))
+    celery = Celery(app_name, backend=os.getenv("CELERY_RESULT_BACKEND"), broker=os.getenv("CELERY_BROKER_URL"), imports=('app.tasks', ))
     # TODO Pickle is unsafe - read more here: https://docs.celeryq.dev/en/latest/userguide/security.html#serializers
-    # Implement client authorization
+    # Implement celery client authorization
     celery.conf.task_serializer = 'pickle'
     celery.conf.result_serializer = 'pickle'
     celery.conf.accept_content = ['application/json', 'application/x-python-serialize']
