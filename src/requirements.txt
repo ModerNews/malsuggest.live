@@ -11,3 +11,4 @@ psycopg2-binary
 flower
 bs4
 redis
+gunicorn~=20.0

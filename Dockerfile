@@ -9,14 +9,16 @@ RUN mkdir -p /var/log/flask_server && touch /var/log/flask_server/flask_server.e
 RUN chown -R flask_user:flask_user /var/log/flask_server
 WORKDIR /home/anime_suggester/
 
-#COPY --chown=flask_user:flask_user ./src .
-COPY ./src .
+COPY --chown=flask_user:flask_user ./src .
+#COPY ./src .
 
 RUN python3 -m pip install -r requirements.txt --no-cache-dir
 
-COPY ./build_files/celery/* ./celery_deamon/
+COPY ./build_files/run.sh ./run.sh
+COPY ./build_files/celery/* ./celery_daemon/
 RUN sh ./celery_deamon/make_celery.sh
 
 EXPOSE 5000
+USER flaks_user
 
-CMD ["python", "./runner.py"]
+CMD ["sh", "./run.sh"]
