@@ -14,6 +14,7 @@ services:
       - POSTGRES_PASSWORD=/run/secrets/psql_passwd
     volumes:
       - db_data:/var/lib/postgresql/data
+      - db_backup:/var/lib/postgresql/backup
     
   flask_server:
     build:
@@ -62,6 +63,7 @@ networks:
 
 volumes:
   db_data: {}
+  db_backup: {}
 
 secrets:
     psql_passwd:
