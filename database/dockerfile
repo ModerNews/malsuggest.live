@@ -9,4 +9,4 @@ ADD ./database_dump.sql /docker-entrypoint-initdb.d/
 ADD ./auto_backup.sh /home/anime_suggester/
 
 # Add crontask for creating backup
-RUN crontab -l 2>/dev/null; echo '0 7 * * * /home/anime_suggester/auto_backup.sh' | crontab -
+#RUN crontab -l 2>/dev/null; echo '0 7 * * * /home/anime_suggester/auto_backup.sh' | crontab -

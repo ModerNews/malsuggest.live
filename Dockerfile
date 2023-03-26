@@ -16,9 +16,9 @@ RUN python3 -m pip install -r requirements.txt --no-cache-dir
 
 COPY ./build_files/run.sh ./run.sh
 COPY ./build_files/celery/* ./celery_daemon/
-RUN sh ./celery_deamon/make_celery.sh
+RUN sh ./celery_daemon/make_celery.sh
 
 EXPOSE 5000
-USER flaks_user
+USER flask_user
 
 CMD ["sh", "./run.sh"]

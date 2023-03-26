@@ -26,6 +26,9 @@ services:
     networks:
       - server-side
       - client-side
+    secrets:
+      - jwt_public_key
+      - jwt_private_key
     environment:
       - CELERY_BROKER_URL=redis://redis_backend:6379/0
       - CELERY_RESULT_BACKEND=redis://redis_backend:6379/1
@@ -38,6 +41,9 @@ services:
       - MAL_CLIENT_SECRET=7d1c1c9dff161b5bf61dbbb1cc8ceed03d7988db888fc702ef8b9a6ebff7de7e
       - TEMPLATE_PATH=/home/anime_suggester/templates/
       - STATIC_PATH=/home/anime_suggester/static/
+      - JWT_PUBLIC_KEY=jwt_public_key
+      - JWT_PRIVATE_KEY=jwt_private_key
+      - JWT_PASSWORD=2616
     depends_on:
       - database
       - redis_backend
@@ -73,3 +79,7 @@ volumes:
 secrets:
     psql_passwd:
         file: ./build_files/secrets/psql_passwd
+    jwt_public_key:
+        file: ./build_files/secrets/AnimeSuggestJWT_0x6A90FACE_public.asc
+    jwt_private_key:
+        file: ./build_files/secrets/AnimeSuggestJWT_0x6A90FACE_SECRET.asc

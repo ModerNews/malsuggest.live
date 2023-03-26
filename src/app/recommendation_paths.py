@@ -2,7 +2,7 @@ import os
 
 import celery
 import malclient
-from flask import current_app, render_template, request, make_response, Response, abort
+from flask import current_app, render_template, request, make_response, Response, abort, g as flask_g, redirect
 from flask.blueprints import Blueprint
 
 from . import celery as celery_instance
@@ -29,21 +29,31 @@ def get_mal_data(cache: list[tuple]):
     return tuple(new_cache), primary
 
 
-def schedule_new_celery_task():
+def schedule_new_celery_task(tokens):
     """
     This is helper function, it creates malclient object, schedules calculate task and creates Flask response
 
     :returns: Loading page with customized cookies
     :r_type: Response
     """
-    client = malclient.Client(access_token=request.cookies["access_token"],
-                              refresh_token=request.cookies['refresh_token'])
+    user_id, access_token, refresh_token = tokens
+    client = malclient.Client(access_token=access_token, refresh_token=refresh_token)
     calculator_task: celery.Task = calculate_personal_score.delay(client, current_app.data_bank)
     current_app.database.create_task(calculator_task.id)
     current_app.debug_value = True
     response = make_response(render_template('loading.html'))
     response.set_cookie('task_id', calculator_task.id)
     return response
+
+
+@recommendations_blueprint.before_request
+def before_request():
+    print(request.endpoint)
+    if request.path == '/recommendations' and 'session_token' in request.cookies:
+        flask_g.tokens = current_app.database.get_mal_tokens_for_session(request.cookies['session_token'])
+        print('token data was set')
+        if not flask_g.tokens:
+            abort(401)
 
 
 @recommendations_blueprint.get('/recommendations')
@@ -61,6 +71,7 @@ def recommendations_page():
     Else page with final results is rendered
     """
     try:
+        print("Full stop")
         task_id = request.cookies['task_id']
         task = celery_instance.AsyncResult(task_id)
         if task.state in ("STARTED",):
@@ -81,7 +92,9 @@ def recommendations_page():
 
     except (ValueError, KeyError):
         # task not even started
-        return schedule_new_celery_task()
+        # TODO is None
+        return schedule_new_celery_task(flask_g.tokens)
+
 
 @recommendations_blueprint.get('/anonymous')
 def anonymous_search():

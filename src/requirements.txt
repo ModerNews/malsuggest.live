@@ -12,3 +12,5 @@ flower
 bs4
 redis
 gunicorn~=20.0
+PyJWT
+cryptography
