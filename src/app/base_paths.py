@@ -28,6 +28,7 @@ def index():
 
 
 def save_session_data_to_database(user_id, token, expires_in, token_response):
+    current_app.database.delete_mal_tokens_with_user_id(user_id)  # First deleting all tokens for given user that went stale
     current_app.database.create_session(user_id=user_id, token=token, expires_in=expires_in)
     current_app.database.create_mal_tokens(user_id=user_id,
                                            access_token=token_response.get('access_token'),
