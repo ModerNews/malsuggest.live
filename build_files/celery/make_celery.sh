@@ -14,6 +14,10 @@ mv /home/anime_suggester/celery_daemon/celeryd /etc/default/celeryd
 chmod 640 /etc/default/celeryd # Write-prevent celeryd config
 
 # Get default celeryd init script from github
+if [[ ! -d '/etc/init.d/' ]]; then
+  echo "There is no init.d directory, creating"
+  mkdir /etc/init.d/ # Create init.d directory if not existent
+fi
 touch /etc/init.d/celeryd
 wget https://raw.githubusercontent.com/celery/celery/main/extra/generic-init.d/celeryd -O celeryd
 cp celeryd /etc/init.d/celeryd
@@ -22,5 +26,5 @@ cp celeryd /etc/init.d/celeryd
 #cp ./celery_deamon/flowerd /etc/init.d/flowerd
 # chmod +x /etc/init.d/flowerd
 
-chmod 750 /etc/init.d/celeryd
+chmod 755 /etc/init.d/celeryd
 chown root:root /etc/init.d/celeryd

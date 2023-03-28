@@ -19,6 +19,8 @@ COPY ./build_files/celery/* ./celery_daemon/
 RUN sh ./celery_daemon/make_celery.sh
 
 EXPOSE 5000
-USER flask_user
+#USER flask_user
 
+# To jest security issue jak chuj, ale przynajmniej działa...
+# celeryd must be started as privileged user
 CMD ["sh", "./run.sh"]

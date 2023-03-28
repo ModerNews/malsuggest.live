@@ -48,10 +48,8 @@ def schedule_new_celery_task(tokens):
 
 @recommendations_blueprint.before_request
 def before_request():
-    print(request.endpoint)
     if request.path == '/recommendations' and 'session_token' in request.cookies:
         flask_g.tokens = current_app.database.get_mal_tokens_for_session(request.cookies['session_token'])
-        print('token data was set')
         if not flask_g.tokens:
             abort(401)
 
@@ -92,7 +90,6 @@ def recommendations_page():
 
     except (ValueError, KeyError):
         # task not even started
-        # TODO is None
         return schedule_new_celery_task(flask_g.tokens)
 
 
