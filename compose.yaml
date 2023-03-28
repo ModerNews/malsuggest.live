@@ -80,6 +80,6 @@ secrets:
     psql_passwd:
         file: ./build_files/secrets/psql_passwd
     jwt_public_key:
-        file: ./build_files/secrets/AnimeSuggestJWT_0x6A90FACE_public.asc
+        file: ./build_files/secrets/AnimeSuggestJWT_Public.pgp
     jwt_private_key:
-        file: ./build_files/secrets/AnimeSuggestJWT_0x6A90FACE_SECRET.asc
+        file: ./build_files/secrets/AnimeSuggestJWT_Secret.pgp

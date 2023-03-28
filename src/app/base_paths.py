@@ -5,7 +5,7 @@ import os
 import datetime
 
 import jwt
-
+import secrets
 from flask import current_app, render_template, redirect, url_for, make_response, request, abort
 from flask.blueprints import Blueprint
 
@@ -16,14 +16,16 @@ __all__ = ['page_base_blueprint']
 page_base_blueprint = Blueprint(name='page_base', import_name='page_base_blueprint',
                                 template_folder='')
 
+
 @page_base_blueprint.get('/')
 def index():
     # TODO check if token is present in cookies after user preses "Anonymous Search" button
-    url, code_verifier = malclient.generate_authorization_url('48563b906310d3fdb4cefa1c1877bfc3', redirect_uri=request.base_url + "redirect")
-    logging.info(code_verifier)
-    response = make_response(render_template('index.html', redirect_url=url), 200)
+    token = secrets.token_urlsafe(100)
+    code_verifier = token[:128]
+    response = make_response(render_template('index.html'), 200)
     response.set_cookie('code_verifier', value=base64.b64encode(code_verifier.encode()).decode(),
-                        expires=(datetime.datetime.now(tz=zoneinfo.ZoneInfo('Europe/London')) + datetime.timedelta(minutes=3)))
+                        expires=(datetime.datetime.now(tz=zoneinfo.ZoneInfo('Europe/London')) + datetime.timedelta(
+                            minutes=3)))
     return response
 
 
@@ -33,6 +35,48 @@ def save_session_data_to_database(user_id, token, expires_in, token_response):
     current_app.database.create_mal_tokens(user_id=user_id,
                                            access_token=token_response.get('access_token'),
                                            refresh_token=token_response.get('refresh_token'))
+
+
+def validate_mal_tokens(user_id, access_token, refresh_token) -> bool:
+    """
+    Simple helper function, raises false if request against the API fails
+    This mainly happens if token pair is revoked
+    """
+    try:
+        client = malclient.Client(access_token=access_token, refresh_token=refresh_token)
+        return True
+    except:
+        return False
+
+
+@page_base_blueprint.get('/verify')
+def redirect_verify():
+    method = request.args.get('method')
+    if method == 'login':
+        try:
+            tokens = current_app.database.get_mal_tokens_for_session(request.cookies['session_token'])
+            valid = validate_mal_tokens(*tokens)
+            if not tokens:
+                # Delete revoked token pair from database
+                current_app.database.delete_mal_tokens_with_user_id(tokens[0])
+                raise ValueError("Token pair has been revoked by MAL")
+            else:
+                response = make_response(redirect('/recommendations'))
+                response.delete_cookie('code_verifier')
+                return response
+        except (KeyError, ValueError):
+            logging.info("There is no valid token data available")
+    if method == 'anonymous':
+        # TODO currently anonymous points to 404 page, implement anonymous search
+        pass
+    try:
+        code_verifier = base64.b64decode(request.cookies.get('code_verifier').encode()).decode()
+        url, code_verifier = malclient.generate_authorization_url(os.getenv("MAL_CLIENT_ID"),
+                                                                  redirect_uri=request.root_url + "redirect",
+                                                                  code_verifier=code_verifier)
+        return redirect(url)
+    except KeyError:
+        abort(410)
 
 
 @page_base_blueprint.get('/redirect')
@@ -55,7 +99,8 @@ def redirect_receive():
     user = client.get_user_info()
     token = current_app.generate_session_token(user.id)
     response = make_response(redirect(url_for('recommendations.recommendations_page')), 302)
-    response.set_cookie('session_token', value=token, samesite='Lax', expires=(datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
+    response.set_cookie('session_token', value=token, samesite='Lax', expires=(
+                datetime.datetime.now() + datetime.timedelta(seconds=int(token_response.get('expires_in')))))
     response.delete_cookie('code_verifier')
     save_session_data_to_database(user.id, token, token_response.get('expires_in'), token_response)
     return response

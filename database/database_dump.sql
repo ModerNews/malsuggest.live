@@ -363,8 +363,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.cache TO anime_suggester_clien
 --
 
 GRANT SELECT,INSERT,UPDATE ON TABLE public.task_state TO anime_suggester_client;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.mal_tokens TO anime_suggester_client;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.sessions TO anime_suggester_client;
+GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE public.mal_tokens TO anime_suggester_client;
+GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE public.sessions TO anime_suggester_client;
 
 
 --
