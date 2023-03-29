@@ -49,7 +49,7 @@ class App(Flask):
 
         self.database = None
 
-        # self._jwt_private_key = serialization.load_pem_private_key(bytes(os.getenv('JWT_PRIVATE_KEY'), encoding="utf-8"), password=bytes(os.getenv('JWT_PASSWORD'), encoding='ascii'), backend=default_backend())
+        # self._jwt_private_key = serialization.load_pem_private_key(os.getenv('JWT_PRIVATE_KEY'), password=os.getenv('JWT_PASSWORD'), backend=default_backend())
 
     def connect_private_malclient_instance(self):
         self._private_client = malclient.Client(client_id=os.getenv("MAL_CLIENT_ID"))
@@ -58,4 +58,4 @@ class App(Flask):
         self.database = Connector()
 
     def generate_session_token(self, user_id):
-        return jwt.encode({"user_id": user_id, "created_at": time.mktime(datetime.datetime.now().timetuple())}, '2137', algorithm="HS256")
+        return jwt.encode({"user_id": user_id, "created_at": time.mktime(datetime.datetime.now().timetuple())}, open(os.getenv("JWT_PRIVATE_KEY_FILE"), 'r').read(), algorithm="RS256")

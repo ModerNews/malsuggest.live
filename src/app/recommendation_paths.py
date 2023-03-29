@@ -6,7 +6,7 @@ from flask import current_app, render_template, request, make_response, Response
 from flask.blueprints import Blueprint
 
 from . import celery as celery_instance
-from .tasks import awaited_debug, calculate_personal_score
+from .tasks import calculate_personal_score
 
 recommendations_blueprint = Blueprint(name='recommendations', import_name='recommendations_blueprint')
 
@@ -48,10 +48,13 @@ def schedule_new_celery_task(tokens):
 
 @recommendations_blueprint.before_request
 def before_request():
-    if request.path == '/recommendations' and 'session_token' in request.cookies:
+    if 'session_token' not in request.cookies:
+        flask_g.before_check = (False, 401)
+    if request.path == '/recommendations':
         flask_g.tokens = current_app.database.get_mal_tokens_for_session(request.cookies['session_token'])
         if not flask_g.tokens:
-            abort(401)
+            flask_g.before_check = (False, 401)
+    flask_g.before_check = (True, 200)
 
 
 @recommendations_blueprint.get('/recommendations')
@@ -68,6 +71,11 @@ def recommendations_page():
     If no data is found (it may be due to cache going stale, and being purged) error is raised, and new task is scheduled
     Else page with final results is rendered
     """
+    try:
+        if not flask_g.before_check[0]:
+            abort(flask_g.before_check[1])
+    except AttributeError:
+        pass
     try:
         print("Full stop")
         task_id = request.cookies['task_id']
