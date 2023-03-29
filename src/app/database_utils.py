@@ -53,7 +53,6 @@ class CRUD:
             self._conn.commit()
 
     def create_mal_tokens(self, user_id, access_token, refresh_token):
-        # TODO ensure that tokens are unique psycopg2.errors.UniqueViolation
         with self._conn.cursor() as cur:
             cur.execute("INSERT INTO mal_tokens VALUES (%s, %s, %s)", (user_id, access_token, refresh_token,))
         if self.autocommit:

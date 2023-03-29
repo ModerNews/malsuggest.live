@@ -11,7 +11,7 @@ services:
       - server-side
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=/run/secrets/psql_passwd
+      - POSTGRES_PASSWORD_FILE=/run/secrets/psql_passwd
     volumes:
       - db_data:/var/lib/postgresql/data
       - db_backup:/var/lib/postgresql/backup
@@ -22,6 +22,7 @@ services:
       dockerfile: Dockerfile
     expose:
     - 5000:5000
+    - 8000:8000
     - 5555:5555
     networks:
       - server-side
@@ -37,13 +38,12 @@ services:
       - DB_PORT=5432
       - DB_SCHEMA=anime_suggester
       - DB_USER=anime_suggester_client
-      - MAL_CLIENT_ID=48563b906310d3fdb4cefa1c1877bfc3
-      - MAL_CLIENT_SECRET=7d1c1c9dff161b5bf61dbbb1cc8ceed03d7988db888fc702ef8b9a6ebff7de7e
+      - MAL_CLIENT_ID=${MAL_CLIENT_ID}
+      - MAL_CLIENT_SECRET=${MAL_CLIENT_SECRET}
       - TEMPLATE_PATH=/home/anime_suggester/templates/
       - STATIC_PATH=/home/anime_suggester/static/
-      - JWT_PUBLIC_KEY=jwt_public_key
-      - JWT_PRIVATE_KEY=jwt_private_key
-      - JWT_PASSWORD=2616
+      - JWT_PUBLIC_KEY_FILE=/run/secrets/jwt_public_key
+      - JWT_PRIVATE_KEY_FILE=/run/secrets/jwt_private_key
     depends_on:
       - database
       - redis_backend
@@ -80,6 +80,6 @@ secrets:
     psql_passwd:
         file: ./build_files/secrets/psql_passwd
     jwt_public_key:
-        file: ./build_files/secrets/AnimeSuggestJWT_Public.pgp
+        file: ./build_files/secrets/jwtRS256.key.pub
     jwt_private_key:
-        file: ./build_files/secrets/AnimeSuggestJWT_Secret.pgp
+        file: ./build_files/secrets/jwtRS256.key
