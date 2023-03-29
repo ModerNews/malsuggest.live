@@ -40,3 +40,43 @@ class CRUD:
             cur.execute("UPDATE task_state SET cache_id = %s WHERE task_id = %s", (cache_id, task_id, ))
         if self.autocommit:
             self._conn.commit()
+
+    def get_session_by_token(self, token):
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT * FROM sessions WHERE token = %s", (token, ))
+            return cur.fetchone()
+
+    def create_session(self, user_id, token, expires_in):
+        with self._conn.cursor() as cur:
+            cur.execute("INSERT INTO sessions VALUES (default, %s, %s, %s)", (expires_in, token, user_id,))
+        if self.autocommit:
+            self._conn.commit()
+
+    def create_mal_tokens(self, user_id, access_token, refresh_token):
+        # TODO ensure that tokens are unique psycopg2.errors.UniqueViolation
+        with self._conn.cursor() as cur:
+            cur.execute("INSERT INTO mal_tokens VALUES (%s, %s, %s)", (user_id, access_token, refresh_token,))
+        if self.autocommit:
+            self._conn.commit()
+
+    def get_mal_tokens(self, user_id):
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT * FROM mal_tokens WHERE user_id = %s", (user_id, ))
+            return cur.fetchone()
+
+    def get_mal_tokens_for_session(self, session_token):
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT mal.* FROM mal_tokens mal INNER JOIN sessions s ON mal.user_id = s.user_id WHERE s.token = %s", (session_token, ))
+            return cur.fetchone()
+
+    def delete_mal_tokens_with_user_id(self, user_id):
+        with self._conn.cursor() as cur:
+            cur.execute("DELETE FROM mal_tokens WHERE user_id = %s", (user_id, ))
+        if self.autocommit:
+            self._conn.commit()
+
+    def delete_session_token(self, session_token):
+        with self._conn.cursor() as cur:
+            cur.execute("DELETE FROM sessions WHERE user_id = %s", (session_token, ))
+        if self.autocommit:
+            self._conn.commit()
