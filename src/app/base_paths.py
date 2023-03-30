@@ -21,25 +21,27 @@ page_base_blueprint = Blueprint(name='page_base', import_name='page_base_bluepri
 
 
 def get_banner_params():
-    if os.getenv("BANNER") is not None:
-        banner = os.getenv("BANNER")
-    else:
-        banner = random.choice(os.listdir('./static/banners'))
-    with json.load(open('app/static/banners/banner_options.json', 'r')) as f:
-        try:
-            banner_options = f[banner]
-        except KeyError:
-            banner_options = ''
+    try:
+        with open('/home/anime_suggester/current_banner', 'r') as file:
+            banner = file.read().replace(' ', '').replace('\n', '')
+            assert file != ''
+    except AssertionError:
+        banner = random.choice(os.listdir('/home/anime_suggester/static/images/banners/'))
+    with open('/home/anime_suggester/app/banners_options.json', 'r') as file:
+        f = json.loads(file.read())
+    try:
+        banner_options = f[banner]
+    except KeyError:
+        banner_options = ''
     return banner, banner_options
 
 
 @page_base_blueprint.get('/')
 def index():
     banner, banner_options = get_banner_params()
-    response = make_response(render_template('index.html', banner_file="../static/banners/" + banner, banner_options=banner_options), 200)
+    response = make_response(render_template('index.html', banner_file=f"../static/images/banners/{banner}", banner_options=banner_options), 200)
     token = secrets.token_urlsafe(100)
     code_verifier = token[:128]
-    response = make_response(render_template('index.html'), 200)
     response.set_cookie('code_verifier', value=base64.b64encode(code_verifier.encode()).decode(),
                         expires=(datetime.datetime.now(tz=zoneinfo.ZoneInfo('Europe/London')) + datetime.timedelta(
                             minutes=3)))

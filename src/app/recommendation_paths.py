@@ -77,7 +77,6 @@ def recommendations_page():
     except AttributeError:
         pass
     try:
-        print("Full stop")
         task_id = request.cookies['task_id']
         task = celery_instance.AsyncResult(task_id)
         if task.state in ("STARTED",):

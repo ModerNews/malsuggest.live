@@ -28,3 +28,5 @@ cp celeryd /etc/init.d/celeryd
 
 chmod 755 /etc/init.d/celeryd
 chown root:root /etc/init.d/celeryd
+
+touch current_banner

@@ -1,7 +1,7 @@
 FROM python:3.11.2-buster
 
 RUN pip install --upgrade pip
-RUN apt-get update && apt-get install curl -y
+RUN apt-get update && apt-get install curl cron -y
 
 RUN useradd flask_user
 RUN mkdir /home/anime_suggester && chown flask_user:flask_user /home/anime_suggester
@@ -14,9 +14,12 @@ COPY --chown=flask_user:flask_user ./src .
 
 RUN python3 -m pip install -r requirements.txt --no-cache-dir
 
-COPY ./build_files/run.sh ./run.sh
+COPY ./build_files/*.sh ./
 COPY ./build_files/celery/* ./celery_daemon/
 RUN sh ./celery_daemon/make_celery.sh
+
+RUN touch .current_banner
+RUN (crontab -l 2>/dev/null; echo "* * * * 0 sh /home/anime_suggester/roll_banner.sh") | crontab -
 
 EXPOSE 5000
 #USER flask_user
