@@ -18,13 +18,14 @@ if [[ ! -d '/etc/init.d/' ]]; then
   echo "There is no init.d directory, creating"
   mkdir /etc/init.d/ # Create init.d directory if not existent
 fi
+
 touch /etc/init.d/celeryd
 wget https://raw.githubusercontent.com/celery/celery/main/extra/generic-init.d/celeryd -O celeryd
 cp celeryd /etc/init.d/celeryd
 
 # Uncomment to enable flower interface
 #cp ./celery_deamon/flowerd /etc/init.d/flowerd
-# chmod +x /etc/init.d/flowerd
+#chmod +x /etc/init.d/flowerd
 
 chmod 755 /etc/init.d/celeryd
 chown root:root /etc/init.d/celeryd
