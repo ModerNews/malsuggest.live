@@ -22,23 +22,21 @@ class App(object):
 
 def calculate_favourite_genres(client, user: str = "@me"):
     fields = malclient.Fields()
-    fields.genres = True
-    # fields.list_status = malclient.ListStatusFields.all()
+    fields.genres, fields.average_episode_duration = True, True
     user_list = client.get_user_anime_list(username=user, limit=1000, status='completed', fields=fields, list_status_fields=malclient.ListStatusFields.all())
     genres = {}
-    total_count = len(user_list)
     for anime in user_list:
         try:
             for genre in anime.genres:
                 try:
-                    genres[genre.name]['count'] += 1
+                    genres[genre.name]['count'] += anime.average_episode_duration if anime.average_episode_duration else 24*60 * anime.list_status.num_episodes_watched
                     genres[genre.name]['score'] += anime.list_status.score
                 except KeyError:
                     genres[genre.name] = {'score': anime.list_status.score, 'count': 1}
         except TypeError:
             pass
     return sorted(genres.items(),
-                  key=lambda item: (item[1]['score'] + item[1]['count'] / total_count) / (item[1]['count'] + 1),
+                  key=lambda item: item[1]['score']/item[1]['count'],
                   reverse=True)
 
 
@@ -47,9 +45,9 @@ def calculate_genre_score(client, anime_list: dict, score_list: dict[int, int]):
     for anime, genres in anime_list.items():
         genre_score = sum([1 if genre in favourite_genres else 0 for genre in genres])
         if genre_score >= 3:
-            score_list[anime] += 3
+            score_list[anime] += 6
         if genre_score >= 5:
-            score_list[anime] += 10
+            score_list[anime] += 15
     return score_list
 
 
@@ -75,19 +73,19 @@ def generate_friend_anime_list(client, friends):
 
 
 def get_client_status_lists(client):
-    tmp1 = client.get_user_anime_list(status="watching")
-    tmp2 = client.get_user_anime_list(status="on_hold")
-    tmp3 = client.get_user_anime_list(status="completed")
+    tmp1 = client.get_user_anime_list(status="watching", limit=1000)
+    tmp2 = client.get_user_anime_list(status="on_hold", limit=1000)
+    tmp3 = client.get_user_anime_list(status="completed", limit=1000)
 
-    animes_watching = set([item.id for item in [tmp1 if tmp1 else [] + tmp2 if tmp2 else [] + tmp3 if tmp3 else []][0]])
+    animes_watching = set([item.id for item in [(tmp1 if tmp1 else []) + (tmp2 if tmp2 else []) + (tmp3 if tmp3 else [])][0]])
 
-    animes_dropped = [item.id for item in client.get_user_anime_list(status="dropped")]
-    animes_ptw = [item.id for item in client.get_user_anime_list(status="plan_to_watch")]
+    animes_dropped = [item.id for item in client.get_user_anime_list(status="dropped", limit=1000)]
+    animes_ptw = [item.id for item in client.get_user_anime_list(status="plan_to_watch", limit=1000)]
     return animes_watching, animes_ptw, animes_dropped
 
 
-def generate_scores_table(anime_list, animes_watching):
-    return {item: 10 for item in set([item.id for item in anime_list]) - animes_watching}
+def generate_scores_table(anime_list, animes_watching, top_100):
+    return {item: 10 for item in set([temp for temp in ([item.id for item in anime_list] + top_100) if temp not in animes_watching])}
 
 
 def calculate_rewatch_score(merged_list, anime_score_list):

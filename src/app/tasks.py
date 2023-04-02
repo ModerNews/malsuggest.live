@@ -35,7 +35,7 @@ def calculate_personal_score(self, client: malclient.Client, data_bank):
     animes_watching, animes_ptw, animes_dropped = library.get_client_status_lists(client)
     animes_with_genres = library.generate_genre_list(merged_list, animes_watching)
 
-    total_unique_animes = library.generate_scores_table(merged_list, animes_watching)
+    total_unique_animes = library.generate_scores_table(merged_list, animes_watching, data_bank.animes_top_100)
     total_unique_animes = library.calculate_genre_score(client, animes_with_genres, total_unique_animes.copy())
     total_unique_animes = library.calculate_recommendation_score(client, total_unique_animes)
     total_unique_animes = library.calculate_rewatch_score(merged_list, total_unique_animes)
@@ -53,8 +53,9 @@ def calculate_personal_score(self, client: malclient.Client, data_bank):
         except KeyError:
             pass
 
-    max_value = max(total_unique_animes.values())
-    top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value][:13]
+    top_scored_animes = [key for key, value in sorted(total_unique_animes.items(), key=lambda x: x[1], reverse=True)[:13]]
+    # max_value = max(total_unique_animes.values())
+    # top_scored_animes = [key for key, value in total_unique_animes.items() if value == max_value]
     chosen = choice(top_scored_animes)
     pass_data_to_database([top_scored_animes, chosen], self.request.id)
     return chosen

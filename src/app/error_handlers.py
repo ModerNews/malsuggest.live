@@ -29,3 +29,12 @@ def code_not_present(e):
 def page_not_available(e):
     return render_template('errors/error.html', error_title='Page not found',
                            error_msg='This probably means that the function you tried to use was not implemented yet')
+
+
+@error_handler_blueprint.app_errorhandler(500)
+def server_error(e):
+    response = make_response(render_template('errors/error.html', error_title='Server error',
+                           error_msg='It\'s on us this time! We\'ve cleared your session, please try again!'), 500)
+    response.delete_cookie('session_token')
+    response.delete_cookie('task_id')
+    return response
