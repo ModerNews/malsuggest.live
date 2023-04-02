@@ -11,6 +11,7 @@
     <link href="../static/css/footer.css" rel="stylesheet">
     <link href="../static/css/banner.css" rel="stylesheet">
     <link href="../static/css/general.css" rel="stylesheet">
+    <link href="../static/css/index.css" rel="stylesheet">
 </head>
 
 <body>
@@ -35,12 +36,15 @@
                         </div>
                         <hr>
                         <div class="desktop_view">
-                            <div id="recommendations" class="row" style="display:flex;justify-content:center">
+                            <div id="recommendations" class="row" style="display:flex;justify-content:center;margin: 0 5px 1rem;">
                                 {% for recommendation in recommendations %}
                                 <div style="width: calc(100% * (1/4)) - 1px">
                                     <figure>
-                                        <img src={{ recommendation.main_picture }} width="200" height="300" alt='missing' />
-                                        <figcaption>{{ recommendation.title }}</figcaption>
+                                        <a style="" href="https://myanimelist.net/anime/{{ recommendation.id }}">
+                                            <img src={{ recommendation.main_picture }} width="200" height="300" alt='missing' />
+{#                                            <figcaption>{{ recommendation.title if len(recommendation.title) <= 26 else recommendation.title[:22] + "..."}}</figcaption>#}
+                                            <figcaption>{% if recommendation.title|length <= 26 %}{{ recommendation.title }}{% else %}{{ recommendation.title[:22] ~ "..." }}{% endif %}</figcaption>
+                                        </a>
                                     </figure>
                                 </div>
                                 {% endfor %}
