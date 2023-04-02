@@ -30,8 +30,10 @@
                         <hr>
                         <div id="top-recommendation" class="row" style="margin-left:auto; margin-right:auto; display:block">
                             <figure>
-                                <img class="img-fluid" src={{ primary_result.main_picture }} width="300" height="400" alt="">
-                                <figcaption>{{ primary_result.title }}</figcaption>
+                                <a style="" href="https://myanimelist.net/anime/{{ primary_result.id }}">
+                                    <img class="img-fluid" src={{ primary_result.main_picture }} width="300" height="400" alt="">
+                                    <figcaption>{{ primary_result.title }}</figcaption>
+                                </a>
                             </figure>
                         </div>
                         <hr>
